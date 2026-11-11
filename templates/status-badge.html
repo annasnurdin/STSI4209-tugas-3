@@ -1,0 +1,12 @@
+<template id="tpl-status-badge">
+  <span v-if="type === 'stock'">
+    <span v-if="Number(qty) === 0" class="status-badge status-kosong">Kosong</span>
+    <span v-else-if="Number(qty) < Number(safety)" class="status-badge status-menipis">Menipis</span>
+    <span v-else class="status-badge status-aman">Aman</span>
+  </span>
+  <span v-else-if="type === 'tracking'">
+    <span :class="['status-badge', statusText === 'Selesai Antar' ? 'status-aman' : 'status-menipis']">
+      {{ statusText }}
+    </span>
+  </span>
+</template>

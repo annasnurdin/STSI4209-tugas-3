@@ -1,0 +1,124 @@
+<template id="tpl-tracking">
+  <section class="card">
+    <h3 style="margin-top: 0; margin-bottom: 15px; color: #004080;">Tracking Pengiriman Bahan Ajar</h3>
+
+    <!-- input pencarian -->
+    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+      <input 
+        type="text" 
+        v-model.trim="inputSearch" 
+        @keyup.enter="cariDO" 
+        @keyup.esc="resetSearch" 
+        placeholder="Masukkan Nomor DO (misal: DO2025-001) atau NIM Mahasiswa" 
+        style="flex: 1; padding: 9px 12px; border: 1px solid #ccc; border-radius: 3px; font-size: 14px;">
+      <button type="button" @click="cariDO" style="padding: 9px 18px; font-size: 14px; white-space: nowrap;">
+        Cari DO
+      </button>
+      <button type="button" class="btn-secondary" @click="resetSearch" style="padding: 9px 14px; font-size: 14px; white-space: nowrap;">
+        Reset (Esc)
+      </button>
+    </div>
+
+    <!-- hasil tracking -->
+    <div v-if="hasilTracking" style="border-top: 1px solid #eee; padding-top: 15px;">
+      <table class="table-detail">
+        <tbody>
+          <tr>
+            <th>Nomor DO</th>
+            <td><strong>{{ hasilTracking.nomorDO }}</strong></td>
+          </tr>
+          <tr>
+            <th>NIM Mahasiswa</th>
+            <td>{{ hasilTracking.nim }}</td>
+          </tr>
+          <tr>
+            <th>Nama Mahasiswa</th>
+            <td>{{ hasilTracking.nama }}</td>
+          </tr>
+          <tr>
+            <th>Status Pengiriman</th>
+            <td>
+              <status-badge type="tracking" :status-text="hasilTracking.status"></status-badge>
+            </td>
+          </tr>
+          <tr>
+            <th>Jasa Ekspedisi</th>
+            <td>{{ hasilTracking.ekspedisi }}</td>
+          </tr>
+          <tr>
+            <th>Tanggal Kirim</th>
+            <td>{{ hasilTracking.tanggalKirim | formatTanggal }}</td>
+          </tr>
+          <tr>
+            <th>Jenis Paket</th>
+            <td>{{ hasilTracking.namaPaket }}</td>
+          </tr>
+          <tr>
+            <th>Total Pembayaran</th>
+            <td><strong>{{ hasilTracking.total | rupiah }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- riwayat perjalanan -->
+      <h4 style="margin: 20px 0 10px; font-size: 15px; color: #004080;">Riwayat Perjalanan Pengiriman</h4>
+      <table class="table-riwayat">
+        <thead>
+          <tr>
+            <th style="width: 190px;">Waktu</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(p, i) in hasilTracking.perjalanan" :key="i">
+            <td>{{ p.waktu }}</td>
+            <td>{{ p.keterangan }}</td>
+          </tr>
+          <tr v-if="!hasilTracking.perjalanan || hasilTracking.perjalanan.length === 0">
+            <td colspan="2" style="text-align: center; color: #777;">Belum ada data perjalanan.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- form progress -->
+      <div style="margin-top: 20px; padding: 15px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 3px;">
+        <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #004080;">+ Tambah Progress Perjalanan Pengiriman</h4>
+        <form @submit.prevent="tambahProgress" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <input 
+            type="text" 
+            v-model.trim="inputProgress" 
+            placeholder="Masukkan keterangan update perjalanan (contoh: Tiba di Kantor Cabang Denpasar)" 
+            style="flex: 1; min-width: 250px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px;">
+          <button type="submit" style="padding: 8px 14px; font-size: 13px;">
+            Tambah Update Progress
+          </button>
+        </form>
+        <span v-if="progressError" class="form-error">{{ progressError }}</span>
+      </div>
+    </div>
+
+    <div v-else-if="activeKeyword" class="alert-danger">
+      Data pengiriman untuk keyword <strong>"{{ activeKeyword }}"</strong> tidak ditemukan. Silakan periksa kembali Nomor DO atau NIM yang dimasukkan.
+    </div>
+
+    <div v-else class="alert-info" style="margin-top: 15px;">
+      Silakan masukkan Nomor Delivery Order atau NIM Mahasiswa pada kolom pencarian di atas untuk melacak status pengiriman.
+    </div>
+
+    <!-- daftar DO terdaftar -->
+    <div style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;">
+      <span style="font-size: 13px; color: #666; font-weight: bold;">Daftar DO Terdaftar (Klik untuk melacak):</span>
+      <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button 
+          type="button" 
+          v-for="(val, key) in tracking" 
+          :key="key" 
+          class="btn-secondary" 
+          style="padding: 4px 10px; font-size: 12px; cursor: pointer;"
+          @click="pilihDO(key)">
+          {{ key }} ({{ val.nama }})
+        </button>
+      </div>
+    </div>
+  </section>
+</template>
